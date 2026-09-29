@@ -113,7 +113,7 @@
             </div>
 
             <div id="practiceContainer" class="bg-white p-5 rounded-2xl shadow-sm border border-[#e6ddd6]">
-                <div id="practiceContent" class="text-center py-6 text-gray-500">질문을 불러오는 중이거나 질문이 없습니다.</div>
+                <div id="practiceContent" class="text-left py-6 text-gray-500"><div class="text-center">질문을 불러오는 중이거나 질문이 없습니다.</div></div>
             </div>
         </div>
     </section>
@@ -657,12 +657,12 @@
         counter.innerText = `${practiceIndex + 1} / ${practiceQuestions.length}`;
 
         container.innerHTML = `
-            <div class="mb-4 flex gap-2">
+            <div class="mb-4 flex gap-2 justify-start">
                 <span class="bg-[#f4efeb] text-[#8c6a50] text-sm px-3 py-1 rounded-full font-bold">Q${practiceIndex + 1}</span>
                 <span class="bg-gray-100 text-gray-500 text-sm px-3 py-1 rounded-full font-bold">${q.area || '공통'}</span>
             </div>
             
-            <p class="font-bold text-lg text-gray-800 mb-6 leading-snug break-keep">${q.question}</p>
+            <p class="font-bold text-base text-gray-800 mb-6 leading-relaxed break-keep text-left">${q.question}</p>
             
             ${q.followup ? `
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 text-left">
