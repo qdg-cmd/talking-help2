@@ -49,17 +49,22 @@
 
 <main class="p-4 max-w-2xl mx-auto">
     
-    <!-- 탭 1: 후기 검색 -->
-    <section id="tab-reviews" class="tab-content active">
-        <h2 class="text-2xl font-bold mb-4">🔍 면접 후기 검색</h2>
-        <div class="flex gap-2 mb-4">
-            <input type="text" id="searchUni" placeholder="대학교 검색 (예: 가천대)" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8c6a50]">
-            <button class="btn-primary px-4 py-2 rounded-lg font-bold whitespace-nowrap" onclick="searchReviews()">검색</button>
-        </div>
-        <div id="reviewResults" class="space-y-4">
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center text-gray-500 py-10">
-                원하시는 대학교를 검색하면 면접 기출과 후기가 나타납니다.
+    <!-- 탭 1: 후기 검색 (PDF 뷰어 방식) -->
+    <section id="tab-reviews" class="tab-content active h-screen max-h-[80vh] flex flex-col">
+        <div class="mb-4">
+            <h2 class="text-2xl font-bold mb-2">📚 면접 후기 자료집</h2>
+            <p class="text-sm text-gray-500 mb-4">원본 PDF 자료집을 보며 원하는 대학을 검색(Ctrl+F)해 보세요.</p>
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('pdfViewer').src='(울산광역시교육청) 2026 대입 면접 후기 자료집1(가천대~부산대).pdf'" class="flex-1 bg-[#8c6a50] text-white py-2 rounded-lg font-bold text-sm hover:bg-[#7a5a40]">
+                    1권 (가천대~부산대)
+                </button>
+                <button onclick="document.getElementById('pdfViewer').src='(울산광역시교육청) 2026 대입 면접 후기 자료집2(부산대~홍익대).pdf'" class="flex-1 bg-[#8c6a50] text-white py-2 rounded-lg font-bold text-sm hover:bg-[#7a5a40]">
+                    2권 (부산대~홍익대)
+                </button>
             </div>
+        </div>
+        <div class="flex-1 w-full bg-gray-200 rounded-xl overflow-hidden shadow-inner">
+            <iframe id="pdfViewer" src="(울산광역시교육청) 2026 대입 면접 후기 자료집1(가천대~부산대).pdf" class="w-full h-full border-none min-h-[500px]" type="application/pdf"></iframe>
         </div>
     </section>
 
@@ -191,8 +196,8 @@
         ["건국대", "KU자기추천", "생명과학특성학과", "생명 존엄성과 관련하여 가장 기억에 남는 학자의 견해가 있나요?", "인간의 생명 존엄성은 누구도 해칠 수 없고, 칸트 같은 경우에는 자신의 목숨을 단지 수단으로만 이용해서는 안 된다고 말했습니다."]
     ];
 
-    // ✅ Google Apps Script 배포 URL (반드시 본인의 URL로 변경하세요!)
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlYYu0QbjGZK4pRVe7B132juxsjjkfJPHXBuQc_XkBRsWq_jOi4Ji5dQpuHnpDA6yi/exec'; 
+    // ✅ Google Apps Script 배포 URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlYYu0QbjGZK4pRVe7B132juxsjjkfJPHXBuQc_XkBRsWq_jOi4Ji5dQpuHnpDA6yi/exec';
 
 
     let currentUser = '';
@@ -306,37 +311,13 @@
         if(!q) return alert("대학교 이름을 입력하세요.");
         
         results.innerHTML = `<div class="loader my-10"></div>`;
-        
-        // reviews_data.js에 미리 구성된 MOCK_REVIEWS 사용
-        if(typeof MOCK_REVIEWS !== 'undefined') {
-            setTimeout(() => {
-                const arr = MOCK_REVIEWS;
-                const filtered = arr.filter(row => row.join(' ').includes(q));
-                if(filtered.length === 0) {
-                    results.innerHTML = `<div class="bg-white p-4 rounded-xl text-gray-500 text-center">검색 결과가 없습니다.</div>`;
-                    return;
-                }
-                results.innerHTML = filtered.map(row => `
-                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-4 text-left">
-                        <div class="mb-2">
-                            <span class="bg-[#8c6a50] text-white px-2 py-1 text-xs rounded font-bold">${row[0]}</span>
-                            <span class="bg-[#f4efeb] text-[#8c6a50] px-2 py-1 text-xs rounded font-bold">${row[1]}</span>
-                            <span class="bg-gray-100 text-gray-600 px-2 py-1 text-xs rounded">${row[2]}</span>
-                        </div>
-                        <p class="font-bold text-gray-800 mt-3 break-keep">Q. ${row[3]}</p>
-                        <p class="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg leading-relaxed whitespace-pre-wrap">A. ${row[4]}</p>
-                    </div>
-                `).join('');
-            }, 300);
-            return;
-        }
 
         fetch(SCRIPT_URL + '?action=getReviews')
         .then(res => res.json())
         .then(data => {
             const arr = data.reviews || [];
             if(arr.length <= 1) {
-                results.innerHTML = `<div class="bg-white p-4 rounded-xl text-gray-500 text-center">등록된 후기가 없습니다.</div>`;
+                results.innerHTML = `<div class="bg-white p-4 rounded-xl text-gray-500 text-center">등록된 후기가 없습니다. 구글 시트의 '후기' 탭을 확인하세요.</div>`;
                 return;
             }
             const filtered = arr.filter((row, i) => i > 0 && row.join(' ').includes(q));
