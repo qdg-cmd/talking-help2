@@ -24,7 +24,7 @@
 <body>
 
 <!-- 헤더 -->
-<header class="bg-white shadow-sm p-4 sticky top-0 z-40 flex justify-between items-center">
+<header class="bg-white shadow-sm p-4 flex justify-between items-center relative z-40">
     <h1 class="text-xl font-bold text-[#8c6a50]">🎓 면접 마스터 LMS</h1>
     <div class="flex gap-2 items-center">
         <button onclick="unlockAdmin()" class="text-xs text-gray-400 hover:text-gray-600">⚙️ 관리자</button>
@@ -81,9 +81,9 @@
     </section>
 
     <!-- 탭 3: 실전 연습 -->
-    <section id="tab-practice" class="tab-content h-[85vh]">
-        <div class="h-full flex flex-col relative">
-            <div class="sticky top-0 z-20 bg-[#fdfbf7] pb-2 border-b border-gray-200 mb-4 pt-2 shadow-sm shrink-0">
+    <section id="tab-practice" class="tab-content">
+        <div class="relative">
+            <div class="sticky top-0 z-30 bg-[#fdfbf7] pb-4 pt-2 shadow-sm border-b border-gray-200 mb-4">
                 <div class="flex justify-between items-center mb-3">
                     <h2 class="text-2xl font-bold">⏱️ 실전 연습</h2>
                     <div class="bg-red-50 text-red-600 px-4 py-1.5 rounded-full font-mono font-black text-2xl border-2 border-red-200 shadow-sm" id="timerDisplay">00:00</div>
@@ -95,10 +95,10 @@
                 </div>
             </div>
 
-            <div id="practiceContainer" class="bg-white p-5 rounded-2xl shadow-sm border border-[#e6ddd6] flex-1 flex flex-col justify-between overflow-y-auto min-h-0">
-                <div id="practiceContent" class="text-center py-6 text-gray-500 flex-1 overflow-y-auto">질문을 불러오는 중이거나 질문이 없습니다.</div>
+            <div id="practiceContainer" class="bg-white p-5 rounded-2xl shadow-sm border border-[#e6ddd6]">
+                <div id="practiceContent" class="text-center py-6 text-gray-500">질문을 불러오는 중이거나 질문이 없습니다.</div>
                 
-                <div class="flex justify-between mt-4 pt-3 border-t border-gray-100 shrink-0">
+                <div class="flex justify-between mt-8 pt-4 border-t border-gray-100">
                     <button onclick="prevPracticeQuestion()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200">◀ 이전</button>
                     <span id="practiceCounter" class="text-sm text-gray-400 font-bold self-center">0 / 0</span>
                     <button onclick="nextPracticeQuestion()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200">다음 ▶</button>
@@ -444,13 +444,13 @@
                 <!-- 텍스트 짤림 방지를 위해 line-clamp 제거, 원본 그대로 렌더링 -->
                 <div class="bg-[#fdfbf7] p-4 rounded-lg text-sm text-gray-700 mb-3 border-l-4 border-[#8c6a50]">
                     <span class="font-bold block mb-2 text-[#8c6a50]">📝 나의 답변 대본:</span>
-                    <div class="whitespace-pre-wrap leading-relaxed">${q.student_answer || '<span class="text-gray-400">내용 없음</span>'}</div>
+                    <div class="whitespace-pre-line leading-relaxed">${q.student_answer || '<span class="text-gray-400">내용 없음</span>'}</div>
                 </div>
                 <div class="bg-blue-50 p-4 rounded-lg text-sm text-gray-700 mb-4 border-l-4 border-blue-400">
                     <span class="font-bold text-blue-700 block mb-2">🔄 꼬리질문:</span> 
-                    <div class="whitespace-pre-wrap leading-relaxed mb-3 text-blue-900">${q.followup || '없음'}</div>
+                    <div class="whitespace-pre-line leading-relaxed mb-3 text-blue-900">${q.followup || '없음'}</div>
                     <span class="font-bold text-blue-700 block mb-2 border-t border-blue-100 pt-3">📝 꼬리질문 답변 대본:</span> 
-                    <div class="whitespace-pre-wrap leading-relaxed">${q.followup_answer || '<span class="text-gray-400">내용 없음</span>'}</div>
+                    <div class="whitespace-pre-line leading-relaxed">${q.followup_answer || '<span class="text-gray-400">내용 없음</span>'}</div>
                 </div>
 
                 <div class="flex justify-between items-center mt-2 border-t pt-4">
@@ -581,12 +581,12 @@
                 <span class="bg-gray-100 text-gray-500 text-sm px-3 py-1 rounded-full font-bold">${q.area || '공통'}</span>
             </div>
             
-            <p class="font-bold text-2xl text-gray-800 mb-6 leading-snug break-keep">${q.question}</p>
+            <p class="font-bold text-lg text-gray-800 mb-6 leading-snug break-keep">${q.question}</p>
             
             ${q.followup ? `
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 text-left">
                 <p class="font-bold text-blue-700 text-sm mb-1">🔄 꼬리질문</p>
-                <p class="text-blue-900 font-medium whitespace-pre-wrap">${q.followup}</p>
+                <p class="text-blue-900 font-medium whitespace-pre-line">${q.followup}</p>
             </div>
             ` : ''}
             
@@ -595,11 +595,11 @@
                 <button onclick="toggleScript(false)" class="absolute -top-3 right-4 shadow-md font-bold text-sm bg-white border border-[#8c6a50] text-[#8c6a50] px-4 py-2 rounded-full hover:bg-[#fdfbf7]">🙈 대본 다시 숨기기</button>
                 
                 <h4 class="font-bold text-[#8c6a50] mb-2 text-sm mt-4">📝 나의 답변 대본</h4>
-                <p class="text-gray-700 whitespace-pre-wrap mb-4 leading-relaxed">${q.student_answer || '<span class="text-gray-400">대본이 없습니다.</span>'}</p>
+                <p class="text-gray-700 whitespace-pre-line mb-4 leading-relaxed">${q.student_answer || '<span class="text-gray-400">대본이 없습니다.</span>'}</p>
                 
                 ${q.followup ? `
                 <h4 class="font-bold text-blue-700 mb-2 text-sm mt-4 border-t pt-4">🔄 꼬리질문 답변 대본</h4>
-                <p class="text-blue-900 whitespace-pre-wrap leading-relaxed">${q.followup_answer || '<span class="text-gray-400">대본이 없습니다.</span>'}</p>
+                <p class="text-blue-900 whitespace-pre-line leading-relaxed">${q.followup_answer || '<span class="text-gray-400">대본이 없습니다.</span>'}</p>
                 ` : ''}
             </div>
 
