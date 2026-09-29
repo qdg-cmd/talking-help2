@@ -49,23 +49,20 @@
 
 <main class="p-4 max-w-2xl mx-auto h-full flex flex-col">
     
-    <!-- 탭 1: 후기 검색 (PDF 뷰어 방식) -->
-    <section id="tab-reviews" class="tab-content active h-[85vh]">
-        <div class="flex flex-col h-full w-full">
-            <div class="mb-3">
-                <h2 class="text-2xl font-bold mb-1">📚 면접 후기 자료집</h2>
-                <p class="text-sm text-gray-500 mb-3">원본 PDF 자료집을 보며 원하는 대학을 검색(Ctrl+F)해 보세요.</p>
-                <div class="flex gap-2">
-                    <button onclick="document.getElementById('pdfViewer').src='(울산광역시교육청) 2026 대입 면접 후기 자료집1(가천대~부산대).pdf'" class="flex-1 bg-[#8c6a50] text-white py-2.5 rounded-lg font-bold text-sm hover:bg-[#7a5a40]">
-                        1권 (가천대~부산대)
-                    </button>
-                    <button onclick="document.getElementById('pdfViewer').src='(울산광역시교육청) 2026 대입 면접 후기 자료집2(부산대~홍익대).pdf'" class="flex-1 bg-[#8c6a50] text-white py-2.5 rounded-lg font-bold text-sm hover:bg-[#7a5a40]">
-                        2권 (부산대~홍익대)
-                    </button>
-                </div>
-            </div>
-            <div class="flex-1 w-full bg-gray-200 rounded-xl overflow-hidden shadow-inner min-h-0">
-                <iframe id="pdfViewer" src="(울산광역시교육청) 2026 대입 면접 후기 자료집1(가천대~부산대).pdf" class="w-full h-full border-none" type="application/pdf"></iframe>
+    <!-- 탭 1: 후기 검색 (새 창 열기 방식) -->
+    <section id="tab-reviews" class="tab-content active">
+        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center mt-4">
+            <div class="text-6xl mb-4">📚</div>
+            <h2 class="text-2xl font-bold mb-2">면접 후기 자료집</h2>
+            <p class="text-gray-500 mb-8 text-sm">교육청 원본 PDF 자료집입니다.<br>아래 버튼을 눌러 모바일에서도 깔끔하게 새 창으로 열어보세요.</p>
+            
+            <div class="flex flex-col gap-3">
+                <button onclick="window.open('(울산광역시교육청) 2026 대입 면접 후기 자료집1(가천대~부산대).pdf', '_blank')" class="w-full bg-[#8c6a50] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#7a5a40] transition shadow-sm">
+                    📖 1권 보기 (가천대 ~ 부산대)
+                </button>
+                <button onclick="window.open('(울산광역시교육청) 2026 대입 면접 후기 자료집2(부산대~홍익대).pdf', '_blank')" class="w-full bg-[#8c6a50] text-white py-4 rounded-xl font-bold text-lg hover:bg-[#7a5a40] transition shadow-sm">
+                    📖 2권 보기 (부산대 ~ 홍익대)
+                </button>
             </div>
         </div>
     </section>
@@ -83,9 +80,14 @@
     <!-- 탭 3: 실전 연습 -->
     <section id="tab-practice" class="tab-content">
         <div class="relative">
+            <!-- 상단 고정 네비게이션 & 타이머 -->
             <div class="sticky top-0 z-30 bg-[#fdfbf7] pb-4 pt-2 shadow-sm border-b border-gray-200 mb-4">
                 <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-2xl font-bold">⏱️ 실전 연습</h2>
+                    <div class="flex items-center gap-2">
+                        <button onclick="prevPracticeQuestion()" class="p-2.5 bg-gray-200 text-gray-700 rounded-lg font-black hover:bg-gray-300 transition leading-none">◀</button>
+                        <span id="practiceCounter" class="font-bold text-gray-600 text-sm w-12 text-center">0 / 0</span>
+                        <button onclick="nextPracticeQuestion()" class="p-2.5 bg-gray-200 text-gray-700 rounded-lg font-black hover:bg-gray-300 transition leading-none">▶</button>
+                    </div>
                     <div class="bg-red-50 text-red-600 px-4 py-1.5 rounded-full font-mono font-black text-2xl border-2 border-red-200 shadow-sm" id="timerDisplay">00:00</div>
                 </div>
                 <div class="flex justify-center gap-2">
@@ -97,12 +99,6 @@
 
             <div id="practiceContainer" class="bg-white p-5 rounded-2xl shadow-sm border border-[#e6ddd6]">
                 <div id="practiceContent" class="text-center py-6 text-gray-500">질문을 불러오는 중이거나 질문이 없습니다.</div>
-                
-                <div class="flex justify-between mt-8 pt-4 border-t border-gray-100">
-                    <button onclick="prevPracticeQuestion()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200">◀ 이전</button>
-                    <span id="practiceCounter" class="text-sm text-gray-400 font-bold self-center">0 / 0</span>
-                    <button onclick="nextPracticeQuestion()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200">다음 ▶</button>
-                </div>
             </div>
         </div>
     </section>
