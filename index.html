@@ -5,20 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>모의면접 LMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: 'Pretendard', sans-serif; background-color: #fdfbf7; color: #332b25; padding-bottom: 70px; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-around; padding: 10px 0; z-index: 50; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; color: #a8866c; cursor: pointer; }
-        .nav-item.active { color: #8c6a50; font-weight: bold; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; color: #a8866c; cursor: pointer; flex: 1; padding: 8px 0; }
+        .nav-item.active { color: #8c6a50; font-weight: bold; background-color: #fdfbf7; }
         .nav-icon { font-size: 1.5rem; margin-bottom: 2px; }
         .btn-primary { background-color: #8c6a50; color: white; transition: background-color 0.2s; }
         .btn-primary:hover { background-color: #7a5a40; }
         .btn-secondary { background-color: #e6ddd6; color: #332b25; transition: background-color 0.2s; }
         .btn-secondary:hover { background-color: #d6ccc2; }
-        /* 로딩 스피너 */
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #8c6a50; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -28,45 +26,56 @@
 <!-- 헤더 -->
 <header class="bg-white shadow-sm p-4 sticky top-0 z-40 flex justify-between items-center">
     <h1 class="text-xl font-bold text-[#8c6a50]">🎓 면접 마스터 LMS</h1>
-    <div class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full cursor-pointer" id="userStatus" onclick="logout()">로그인 필요</div>
+    <div class="flex gap-2 items-center">
+        <button onclick="unlockAdmin()" class="text-xs text-gray-400 hover:text-gray-600">⚙️ 관리자</button>
+        <div class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full cursor-pointer" id="userStatus" onclick="logout()">로그인 필요</div>
+    </div>
 </header>
 
-<!-- 로그인 / 초기 화면 -->
+<!-- 로그인 화면 -->
 <div id="loginScreen" class="fixed inset-0 bg-[#fdfbf7] z-50 flex flex-col items-center justify-center p-4">
     <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 w-full max-w-sm text-center">
         <h2 class="text-2xl font-bold text-[#8c6a50] mb-2">모의면접 LMS</h2>
-        <p class="text-gray-500 mb-6 text-sm">학번과 이름을 입력하여 내 데이터를 불러오세요.</p>
-        <input type="text" id="studentInfo" placeholder="예: 3514 이명빈" class="w-full p-4 mb-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#8c6a50] text-center text-lg font-bold">
+        <p class="text-gray-500 mb-6 text-sm">학번을 입력하여 입장하세요.</p>
+        <input type="text" id="studentId" placeholder="예: 3514" class="w-full p-4 mb-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#8c6a50] text-center text-xl font-bold">
         <button onclick="login()" class="w-full btn-primary py-4 rounded-xl font-bold text-lg">시작하기</button>
         <div id="loginLoading" class="hidden mt-4">
             <div class="loader"></div>
-            <p class="text-sm text-gray-500 mt-2">구글 시트에서 데이터를 불러오는 중...</p>
+            <p class="text-sm text-gray-500 mt-2">데이터를 불러오는 중...</p>
         </div>
     </div>
 </div>
 
 <main class="p-4 max-w-2xl mx-auto">
     
-    <!-- 탭 1: 질문 관리 -->
-    <section id="tab-manage" class="tab-content active">
-        <h2 class="text-2xl font-bold mb-4">📋 예상 질문 관리</h2>
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
-            <h3 class="font-bold mb-2">제미나이 HTML 파일 업로드</h3>
-            <p class="text-sm text-gray-500 mb-4">HTML을 업로드하면 구글 시트에 질문이 자동 저장됩니다.</p>
-            <input type="file" id="htmlUpload" accept=".html" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-[#f4efeb] file:text-[#8c6a50]">
+    <!-- 탭 1: 후기 검색 -->
+    <section id="tab-reviews" class="tab-content active">
+        <h2 class="text-2xl font-bold mb-4">🔍 면접 후기 검색</h2>
+        <div class="flex gap-2 mb-4">
+            <input type="text" id="searchUni" placeholder="대학교 검색 (예: 가천대)" class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8c6a50]">
+            <button class="btn-primary px-4 py-2 rounded-lg font-bold whitespace-nowrap" onclick="searchReviews()">검색</button>
         </div>
+        <div id="reviewResults" class="space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center text-gray-500 py-10">
+                구글 시트 '후기' 탭에 저장된 데이터를 불러옵니다.
+            </div>
+        </div>
+    </section>
+
+    <!-- 탭 2: 질문 관리 -->
+    <section id="tab-manage" class="tab-content">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-lg">나의 면접 대본 리스트</h3>
-            <button onclick="addNewQuestionModal()" class="text-sm btn-secondary px-3 py-1 rounded-lg">+ 새 질문 추가</button>
+            <h2 class="text-2xl font-bold">📋 나의 면접 대본</h2>
+            <button onclick="addNewQuestionModal()" class="text-sm btn-secondary px-3 py-1 rounded-lg">+ 새 질문</button>
         </div>
-        <div id="manageLoading" class="hidden py-10 text-center"><div class="loader"></div></div>
+        <p class="text-sm text-gray-500 mb-4">제미나이가 제공한 답변 방향을 나만의 대본으로 수정해 보세요.</p>
         <div id="questionList" class="space-y-4"></div>
     </section>
 
-    <!-- 탭 2: 실전 연습 (한 문제씩) -->
+    <!-- 탭 3: 실전 연습 -->
     <section id="tab-practice" class="tab-content">
         <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold">⏱️ 실전 면접 연습</h2>
+            <h2 class="text-2xl font-bold">⏱️ 실전 연습</h2>
             <div class="bg-red-50 text-red-600 px-3 py-1 rounded-full font-mono font-bold text-lg border border-red-200" id="timerDisplay">00:00</div>
         </div>
         
@@ -76,7 +85,7 @@
             <button id="btnTimerReset" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full font-bold" onclick="resetTimer()">초기화</button>
         </div>
 
-        <div id="practiceContainer" class="bg-white p-6 rounded-2xl shadow-sm border border-[#e6ddd6] min-h-[300px] flex flex-col justify-between">
+        <div id="practiceContainer" class="bg-white p-6 rounded-2xl shadow-sm border border-[#e6ddd6] min-h-[400px] flex flex-col justify-between">
             <div id="practiceContent" class="text-center py-10 text-gray-500">질문을 불러오는 중이거나 질문이 없습니다.</div>
             
             <div class="flex justify-between mt-6 pt-4 border-t border-gray-100">
@@ -86,13 +95,40 @@
             </div>
         </div>
     </section>
+
+    <!-- 탭 4: 교사 관리자 -->
+    <section id="tab-admin" class="tab-content">
+        <h2 class="text-2xl font-bold mb-4 text-red-600">⚙️ 교사 관리자</h2>
+        <div id="adminAuth" class="mb-6">
+            <input type="password" id="adminPwd" placeholder="비밀번호 입력" class="p-3 border rounded-lg w-full mb-2">
+            <button onclick="checkAdmin()" class="btn-primary w-full py-3 rounded-lg font-bold">인증하기</button>
+        </div>
+        
+        <div id="adminPanel" class="hidden">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-6">
+                <h3 class="font-bold mb-2">학생 제미나이 HTML 일괄 업로드</h3>
+                <p class="text-sm text-gray-500 mb-4">HTML 파일을 업로드하여 특정 학생의 DB(구글시트)로 전송합니다.</p>
+                
+                <label class="block text-sm font-bold text-gray-700 mb-1">대상 학생 학번</label>
+                <input type="text" id="uploadTargetId" placeholder="예: 3514" class="w-full p-3 mb-4 border rounded-lg bg-gray-50">
+                
+                <label class="block text-sm font-bold text-gray-700 mb-1">HTML 파일</label>
+                <input type="file" id="htmlUpload" accept=".html" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-[#f4efeb] file:text-[#8c6a50]">
+                
+                <button onclick="processHTMLUpload()" id="btnUpload" class="mt-4 w-full btn-primary py-3 rounded-lg font-bold">구글 시트로 전송</button>
+            </div>
+        </div>
+    </section>
 </main>
 
-<!-- 하단 네비게이션 바 -->
 <nav class="bottom-nav">
-    <div class="nav-item active" onclick="switchTab('manage', this)">
+    <div class="nav-item active" onclick="switchTab('reviews', this)">
+        <div class="nav-icon">🔍</div>
+        <span>면접 후기</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('manage', this)">
         <div class="nav-icon">📋</div>
-        <span>질문 관리</span>
+        <span>대본 관리</span>
     </div>
     <div class="nav-item" onclick="switchTab('practice', this)">
         <div class="nav-icon">⏱️</div>
@@ -100,100 +136,111 @@
     </div>
 </nav>
 
-<!-- 질문 수정/추가 모달 -->
+<!-- 질문 수정 모달 -->
 <div id="questionModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5">
         <h3 class="text-xl font-bold mb-4 text-[#8c6a50]" id="modalTitle">면접 대본 작성 및 수정</h3>
         <input type="hidden" id="modalId">
-        <div class="space-y-3">
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">면접 질문 (필수)</label>
-                <textarea id="modalQ" class="w-full p-3 border border-gray-200 rounded-lg bg-gray-50" rows="2"></textarea>
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">나의 답변 대본 (실전 연습용)</label>
-                <textarea id="modalStudentAnswer" class="w-full p-3 border border-[#8c6a50] rounded-lg" rows="4" placeholder="실전 면접에서 말할 대본을 작성하세요."></textarea>
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">꼬리질문 및 답변 대본</label>
-                <textarea id="modalFollowup" class="w-full p-3 border border-blue-200 rounded-lg" rows="3" placeholder="예상 꼬리질문과 그에 대한 답변 대본을 작성하세요."></textarea>
-            </div>
+        <div class="space-y-4">
             <div class="flex gap-2">
                 <div class="flex-1">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">영역/역량 (선택)</label>
-                    <input type="text" id="modalArea" class="w-full p-2 border rounded-lg">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">영역/역량</label>
+                    <input type="text" id="modalArea" class="w-full p-2 border rounded-lg text-sm bg-gray-50" readonly>
                 </div>
                 <div class="flex-1">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">탐침 (선택)</label>
-                    <input type="text" id="modalProbing" class="w-full p-2 border rounded-lg">
+                    <label class="block text-xs font-bold text-gray-700 mb-1">탐침</label>
+                    <input type="text" id="modalProbing" class="w-full p-2 border rounded-lg text-sm bg-gray-50" readonly>
                 </div>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">질문</label>
+                <textarea id="modalQ" class="w-full p-2 border border-gray-200 rounded-lg" rows="2"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">나의 답변 대본 (초기값: 제미나이 가이드)</label>
+                <textarea id="modalStudentAnswer" class="w-full p-3 border border-[#8c6a50] rounded-lg focus:ring-2 focus:ring-[#8c6a50] focus:outline-none" rows="4"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">꼬리질문 (참고용)</label>
+                <textarea id="modalFollowup" class="w-full p-2 border border-gray-200 rounded-lg text-gray-600 bg-gray-50" rows="2"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-blue-700 mb-1">꼬리질문 답변 대본</label>
+                <textarea id="modalFollowupAnswer" class="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="3"></textarea>
             </div>
         </div>
         <div class="flex justify-end gap-2 mt-6">
             <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold" onclick="closeModal()">취소</button>
-            <button class="btn-primary px-6 py-2 rounded-lg font-bold" id="btnSaveModal" onclick="saveQuestionToSheet()">구글 시트에 저장</button>
+            <button class="btn-primary px-6 py-2 rounded-lg font-bold" id="btnSaveModal" onclick="saveQuestionToSheet()">저장</button>
         </div>
     </div>
 </div>
 
 <script>
-    // ✅ 여기에 Google Apps Script 배포 URL을 입력해야 합니다!
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlYYu0QbjGZK4pRVe7B132juxsjjkfJPHXBuQc_XkBRsWq_jOi4Ji5dQpuHnpDA6yi/exec'; 
+    // ✅ Google Apps Script 배포 URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwG_XXXXXXXXX/exec'; 
 
     let currentUser = '';
     let questionsDB = [];
+    let reviewsDB = [];
     let practiceIndex = 0;
+    let isAdmin = false;
 
-    // 로그인 로직
+    // 로그인
     function login() {
-        const input = document.getElementById('studentInfo').value.trim();
-        if(!input) return alert('학번/이름을 입력해주세요.');
+        const input = document.getElementById('studentId').value.trim();
+        if(!input) return alert('학번을 입력해주세요.');
         currentUser = input;
         document.getElementById('userStatus').innerText = currentUser;
         
         document.getElementById('loginLoading').classList.remove('hidden');
         
-        // 데이터 불러오기 (임시 구현: SCRIPT_URL이 없으면 로컬 스토리지 또는 빈 배열 사용)
+        fetchData();
+    }
+
+    function fetchData() {
         if(SCRIPT_URL.includes('XXXXX')) {
             setTimeout(() => {
-                const localData = JSON.parse(localStorage.getItem('mockDB_' + currentUser) || '[]');
-                questionsDB = localData;
+                questionsDB = JSON.parse(localStorage.getItem('mockDB_' + currentUser) || '[]');
                 finishLogin();
             }, 500);
-        } else {
-            fetch(SCRIPT_URL + '?action=get&studentId=' + encodeURIComponent(currentUser))
-            .then(res => res.json())
-            .then(data => {
-                questionsDB = data.questions || [];
-                finishLogin();
-            })
-            .catch(err => {
-                console.error(err);
-                alert("데이터를 불러오지 못했습니다. 임시 모드로 시작합니다.");
-                finishLogin();
-            });
+            return;
         }
+
+        fetch(SCRIPT_URL + '?action=getQuestions&studentId=' + encodeURIComponent(currentUser))
+        .then(res => res.json())
+        .then(data => {
+            questionsDB = data.questions || [];
+            finishLogin();
+        })
+        .catch(err => {
+            console.error(err);
+            alert("DB 연결 실패. 임시 모드로 실행합니다.");
+            finishLogin();
+        });
     }
 
     function finishLogin() {
         document.getElementById('loginScreen').classList.add('hidden');
-        renderManageList();
+        switchTab('manage', document.querySelectorAll('.nav-item')[1]);
     }
 
     function logout() {
         if(confirm('로그아웃 하시겠습니까?')) {
             currentUser = '';
-            document.getElementById('studentInfo').value = '';
+            document.getElementById('studentId').value = '';
             document.getElementById('loginScreen').classList.remove('hidden');
         }
     }
 
-    // 탭 전환
+    // 탭 및 관리자
     function switchTab(tabId, element) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.getElementById(`tab-${tabId}`).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        element.classList.add('active');
+        if(element) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+        }
 
         if(tabId === 'manage') renderManageList();
         if(tabId === 'practice') {
@@ -202,36 +249,74 @@
         }
     }
 
-    // 질문 리스트 렌더링
-    function renderManageList() {
-        const container = document.getElementById('questionList');
-        if(questionsDB.length === 0) {
-            container.innerHTML = `<div class="bg-white p-6 rounded-xl text-center text-gray-500 shadow-sm border border-gray-100">등록된 면접 대본이 없습니다.</div>`;
+    function unlockAdmin() {
+        switchTab('admin', null);
+    }
+
+    function checkAdmin() {
+        const pwd = document.getElementById('adminPwd').value;
+        if(pwd === 'admin') {
+            isAdmin = true;
+            document.getElementById('adminAuth').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+        } else {
+            alert("비밀번호가 틀렸습니다.");
+        }
+    }
+
+    // 후기 검색 (Mock or Real)
+    function searchReviews() {
+        const q = document.getElementById('searchUni').value.trim();
+        const results = document.getElementById('reviewResults');
+        if(!q) return alert("대학교 이름을 입력하세요.");
+        
+        results.innerHTML = `<div class="loader my-10"></div>`;
+        
+        if(SCRIPT_URL.includes('XXXXX')) {
+            setTimeout(() => {
+                results.innerHTML = `<div class="bg-white p-4 rounded-xl border">아직 백엔드가 연동되지 않았습니다.</div>`;
+            }, 500);
             return;
         }
 
-        container.innerHTML = questionsDB.map((q, idx) => `
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                <div class="flex gap-2 mb-2">
-                    <span class="bg-[#f4efeb] text-[#8c6a50] text-xs px-2 py-1 rounded font-bold">Q${idx+1}</span>
-                    <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded font-bold">${q.area || '면접질문'}</span>
-                </div>
-                <p class="font-bold text-gray-800 mb-3">${q.question}</p>
-                
-                ${q.student_answer ? `<div class="bg-[#fdfbf7] p-3 rounded-lg text-sm text-gray-700 mb-3 border-l-2 border-[#8c6a50] line-clamp-2">${q.student_answer}</div>` : '<div class="text-sm text-red-500 mb-3">⚠️ 답변 대본이 작성되지 않았습니다.</div>'}
+        fetch(SCRIPT_URL + '?action=getReviews')
+        .then(res => res.json())
+        .then(data => {
+            const arr = data.reviews || [];
+            if(arr.length <= 1) {
+                results.innerHTML = `<div class="bg-white p-4 rounded-xl text-gray-500 text-center">등록된 후기가 없습니다.</div>`;
+                return;
+            }
+            
+            const filtered = arr.filter((row, i) => i > 0 && row.join(' ').includes(q));
+            if(filtered.length === 0) {
+                results.innerHTML = `<div class="bg-white p-4 rounded-xl text-gray-500 text-center">검색 결과가 없습니다.</div>`;
+                return;
+            }
 
-                <div class="flex justify-end gap-2">
-                    <button onclick="editQuestion('${q.id}')" class="text-sm btn-primary px-4 py-1 rounded-lg font-bold">대본 수정</button>
-                    <button onclick="deleteQuestion('${q.id}')" class="text-sm bg-red-50 px-3 py-1 rounded-lg text-red-600 font-bold hover:bg-red-100">삭제</button>
+            results.innerHTML = filtered.map(row => `
+                <div class="bg-white p-4 rounded-xl border">
+                    <span class="bg-gray-100 px-2 py-1 text-xs rounded">${row[0]} - ${row[1] || ''}</span>
+                    <p class="font-bold mt-2">Q. ${row[3] || '질문 없음'}</p>
+                    <p class="text-sm text-gray-600 mt-1 whitespace-pre-wrap">A. ${row[4] || '답변 없음'}</p>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
+        })
+        .catch(() => {
+            results.innerHTML = `<div class="text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</div>`;
+        });
     }
 
-    // HTML 업로드 파싱 (제미나이 출력물)
-    document.getElementById('htmlUpload').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if(!file) return;
+    // 관리자 HTML 일괄 업로드 파싱
+    function processHTMLUpload() {
+        const targetId = document.getElementById('uploadTargetId').value.trim();
+        if(!targetId) return alert('대상 학생 학번을 입력하세요.');
+        
+        const fileInput = document.getElementById('htmlUpload');
+        if(fileInput.files.length === 0) return alert('HTML 파일을 선택하세요.');
+
+        const btn = document.getElementById('btnUpload');
+        btn.innerText = "파싱 및 전송 중...";
 
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -244,72 +329,106 @@
                 const qText = card.querySelector('.question-text')?.innerText || '';
                 if(!qText) return;
                 
+                let area = '', probing = '';
+                card.querySelectorAll('span').forEach(s => {
+                    if(s.innerText.includes('탐침')) probing = s.innerText.replace('탐침:', '').replace('탐침', '').trim();
+                    else if(!s.innerText.includes('Q')) area += s.innerText + ' ';
+                });
+
+                // 답변 방향 -> 학생 대본 초기값으로 세팅
+                const prepBox = card.querySelector('.prep-box')?.innerText || '';
                 const deepDive = card.querySelector('.deep-dive-box')?.innerText || '';
                 
                 newQuestions.push({
                     id: Date.now().toString() + idx,
                     question: qText.trim(),
-                    area: '', probing: '',
-                    student_answer: '',
-                    followup: deepDive.trim()
+                    area: area.trim(), 
+                    probing: probing,
+                    student_answer: prepBox.trim(), // 초기값 적용
+                    followup: deepDive.trim(),
+                    followup_answer: '' // 꼬리질문 답변은 빈칸
                 });
             });
 
             if(newQuestions.length > 0) {
-                questionsDB = [...questionsDB, ...newQuestions];
-                syncToGoogleSheets("업로드 완료");
+                sendBulkToGoogleSheets(targetId, newQuestions);
+            } else {
+                alert("질문을 찾을 수 없습니다.");
+                btn.innerText = "구글 시트로 전송";
             }
         };
-        reader.readAsText(file);
-    });
+        reader.readAsText(fileInput.files[0]);
+    }
 
-    // 구글 시트 저장 (또는 로컬스토리지 Mock)
-    function syncToGoogleSheets(successMessage) {
-        document.getElementById('btnSaveModal').innerText = "저장 중...";
-        
+    function sendBulkToGoogleSheets(studentId, questionsArr) {
         if(SCRIPT_URL.includes('XXXXX')) {
-            // 구글 앱스 스크립트 연결 전 임시 로컬 저장
-            localStorage.setItem('mockDB_' + currentUser, JSON.stringify(questionsDB));
-            setTimeout(() => {
-                document.getElementById('btnSaveModal').innerText = "구글 시트에 저장";
-                closeModal();
-                renderManageList();
-                if(successMessage) alert(successMessage);
-            }, 500);
+            localStorage.setItem('mockDB_' + studentId, JSON.stringify(questionsArr));
+            alert(`${studentId} 학생의 DB에 저장되었습니다. (로컬)`);
+            document.getElementById('btnUpload').innerText = "구글 시트로 전송";
             return;
         }
 
-        // 실제 구글 시트로 POST 요청
         fetch(SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({
-                action: 'saveQuestions',
-                studentId: currentUser,
-                questions: questionsDB
+                action: 'saveQuestionsBulk',
+                studentId: studentId,
+                questions: questionsArr
             })
         })
         .then(res => res.json())
-        .then(data => {
-            document.getElementById('btnSaveModal').innerText = "구글 시트에 저장";
-            closeModal();
-            renderManageList();
-            if(successMessage) alert(successMessage);
+        .then(() => {
+            alert(`${studentId} 학생의 구글 시트로 전송 성공!`);
+            document.getElementById('btnUpload').innerText = "구글 시트로 전송";
+            document.getElementById('htmlUpload').value = "";
         })
-        .catch(err => {
-            alert("저장 실패. 스크립트 URL과 권한을 확인해주세요.");
-            console.error(err);
-            document.getElementById('btnSaveModal').innerText = "구글 시트에 저장";
+        .catch(() => {
+            alert("전송 실패.");
+            document.getElementById('btnUpload').innerText = "구글 시트로 전송";
         });
     }
 
-    // 모달 로직
+    // 질문 리스트 렌더링
+    function renderManageList() {
+        const container = document.getElementById('questionList');
+        if(questionsDB.length === 0) {
+            container.innerHTML = `<div class="bg-white p-6 rounded-xl text-center text-gray-500 shadow-sm border">선생님께서 등록해주신 질문이 없습니다.</div>`;
+            return;
+        }
+
+        container.innerHTML = questionsDB.map((q, idx) => `
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex gap-2 mb-2">
+                    <span class="bg-[#f4efeb] text-[#8c6a50] text-xs px-2 py-1 rounded font-bold">Q${idx+1}</span>
+                    <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded font-bold">${q.area || '공통'}</span>
+                    ${q.probing ? `<span class="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded font-bold">${q.probing}</span>` : ''}
+                </div>
+                <p class="font-bold text-gray-800 mb-3">${q.question}</p>
+                
+                <div class="bg-[#fdfbf7] p-3 rounded-lg text-sm text-gray-700 mb-2 border-l-2 border-[#8c6a50] line-clamp-2">
+                    <span class="font-bold block mb-1">나의 답변 대본:</span>
+                    ${q.student_answer || '<span class="text-gray-400">내용 없음</span>'}
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg text-sm text-gray-700 mb-3 border-l-2 border-blue-400 line-clamp-1">
+                    <span class="font-bold text-blue-700">꼬리질문:</span> ${q.followup || '없음'}
+                </div>
+
+                <div class="flex justify-end">
+                    <button onclick="editQuestion('${q.id}')" class="text-sm btn-primary px-4 py-2 rounded-lg font-bold">대본 수정하기</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 모달 로직 (수정)
     const modal = document.getElementById('questionModal');
     function addNewQuestionModal() {
         document.getElementById('modalId').value = '';
         document.getElementById('modalQ').value = '';
         document.getElementById('modalStudentAnswer').value = '';
         document.getElementById('modalFollowup').value = '';
-        document.getElementById('modalArea').value = '';
+        document.getElementById('modalFollowupAnswer').value = '';
+        document.getElementById('modalArea').value = '직접 추가';
         document.getElementById('modalProbing').value = '';
         modal.classList.remove('hidden');
     }
@@ -321,6 +440,7 @@
         document.getElementById('modalQ').value = q.question;
         document.getElementById('modalStudentAnswer').value = q.student_answer || '';
         document.getElementById('modalFollowup').value = q.followup || '';
+        document.getElementById('modalFollowupAnswer').value = q.followup_answer || '';
         document.getElementById('modalArea').value = q.area || '';
         document.getElementById('modalProbing').value = q.probing || '';
         modal.classList.remove('hidden');
@@ -334,6 +454,7 @@
             question: document.getElementById('modalQ').value,
             student_answer: document.getElementById('modalStudentAnswer').value,
             followup: document.getElementById('modalFollowup').value,
+            followup_answer: document.getElementById('modalFollowupAnswer').value,
             area: document.getElementById('modalArea').value,
             probing: document.getElementById('modalProbing').value,
         };
@@ -341,28 +462,54 @@
         if(id) {
             const idx = questionsDB.findIndex(x => x.id === id);
             questionsDB[idx] = { ...questionsDB[idx], ...newObj };
+            syncSingleToGoogleSheets(questionsDB[idx]);
         } else {
             newObj.id = Date.now().toString();
             questionsDB.push(newObj);
+            syncSingleToGoogleSheets(newObj);
         }
+    }
+
+    function syncSingleToGoogleSheets(questionObj) {
+        document.getElementById('btnSaveModal').innerText = "저장 중...";
         
-        syncToGoogleSheets();
-    }
-
-    function deleteQuestion(id) {
-        if(confirm('구글 시트에서도 완전히 삭제됩니다. 삭제하시겠습니까?')) {
-            questionsDB = questionsDB.filter(x => x.id !== id);
-            syncToGoogleSheets();
+        if(SCRIPT_URL.includes('XXXXX')) {
+            localStorage.setItem('mockDB_' + currentUser, JSON.stringify(questionsDB));
+            setTimeout(() => {
+                document.getElementById('btnSaveModal').innerText = "저장";
+                closeModal();
+                renderManageList();
+            }, 500);
+            return;
         }
+
+        fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'saveQuestion',
+                studentId: currentUser,
+                question: questionObj
+            })
+        })
+        .then(res => res.json())
+        .then(() => {
+            document.getElementById('btnSaveModal').innerText = "저장";
+            closeModal();
+            renderManageList();
+        })
+        .catch(err => {
+            alert("저장 실패");
+            document.getElementById('btnSaveModal').innerText = "저장";
+        });
     }
 
-    // 실전 연습 (한 문제씩 캐러셀)
+    // 실전 연습 (한 문제씩)
     function renderPracticeCard() {
         const container = document.getElementById('practiceContent');
         const counter = document.getElementById('practiceCounter');
 
         if(questionsDB.length === 0) {
-            container.innerHTML = `<div class="text-center py-10 text-gray-500">질문 관리 탭에서 질문을 추가해주세요.</div>`;
+            container.innerHTML = `<div class="text-center py-10 text-gray-500">질문이 없습니다.</div>`;
             counter.innerText = `0 / 0`;
             return;
         }
@@ -371,68 +518,76 @@
         counter.innerText = `${practiceIndex + 1} / ${questionsDB.length}`;
 
         container.innerHTML = `
-            <div class="mb-4">
+            <div class="mb-4 flex gap-2">
                 <span class="bg-[#f4efeb] text-[#8c6a50] text-sm px-3 py-1 rounded-full font-bold">Q${practiceIndex + 1}</span>
+                <span class="bg-gray-100 text-gray-500 text-sm px-3 py-1 rounded-full font-bold">${q.area || '공통'}</span>
             </div>
-            <p class="font-bold text-2xl text-gray-800 mb-8 leading-snug break-keep">${q.question}</p>
             
-            <div id="practiceAnswerBox" class="hidden text-left bg-[#fdfbf7] p-5 rounded-xl border-l-4 border-[#8c6a50] mt-auto">
-                <h4 class="font-bold text-[#8c6a50] mb-2 text-sm">📝 나의 답변 대본</h4>
-                <p class="text-gray-700 whitespace-pre-wrap mb-4">${q.student_answer || '<span class="text-gray-400">작성된 대본이 없습니다.</span>'}</p>
+            <p class="font-bold text-2xl text-gray-800 mb-6 leading-snug break-keep">${q.question}</p>
+            
+            <!-- 꼬리질문은 질문 바로 아래 고정 표출 -->
+            ${q.followup ? `
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 text-left">
+                <p class="font-bold text-blue-700 text-sm mb-1">🔄 꼬리질문</p>
+                <p class="text-blue-900 font-medium">${q.followup}</p>
+            </div>
+            ` : ''}
+            
+            <!-- 대본 확인 영역 (숨김) -->
+            <div id="practiceAnswerBox" class="hidden text-left bg-[#fdfbf7] p-5 rounded-xl border border-[#8c6a50] mt-auto relative">
+                <button onclick="toggleScript(false)" class="absolute top-2 right-2 text-xs bg-gray-200 px-2 py-1 rounded text-gray-600 hover:bg-gray-300">대본 숨기기</button>
+                
+                <h4 class="font-bold text-[#8c6a50] mb-2 text-sm mt-2">📝 나의 답변 대본</h4>
+                <p class="text-gray-700 whitespace-pre-wrap mb-4">${q.student_answer || '<span class="text-gray-400">대본이 없습니다.</span>'}</p>
                 
                 ${q.followup ? `
-                <h4 class="font-bold text-blue-700 mb-2 text-sm mt-4 border-t pt-4">🔄 꼬리질문 및 대본</h4>
-                <p class="text-blue-900 whitespace-pre-wrap">${q.followup}</p>
+                <h4 class="font-bold text-blue-700 mb-2 text-sm mt-4 border-t pt-4">🔄 꼬리질문 답변 대본</h4>
+                <p class="text-blue-900 whitespace-pre-wrap">${q.followup_answer || '<span class="text-gray-400">대본이 없습니다.</span>'}</p>
                 ` : ''}
             </div>
 
-            <button id="btnRevealAnswer" onclick="document.getElementById('practiceAnswerBox').classList.remove('hidden'); this.classList.add('hidden');" class="mt-8 btn-secondary w-full py-3 rounded-xl font-bold text-lg border border-gray-300">
-                👀 내가 작성한 대본 확인하기
+            <button id="btnRevealAnswer" onclick="toggleScript(true)" class="mt-4 btn-secondary w-full py-3 rounded-xl font-bold text-lg border border-gray-300">
+                👀 대본 확인하기
             </button>
         `;
     }
 
-    function prevPracticeQuestion() {
-        if(practiceIndex > 0) {
-            practiceIndex--;
-            renderPracticeCard();
+    function toggleScript(show) {
+        if(show) {
+            document.getElementById('practiceAnswerBox').classList.remove('hidden');
+            document.getElementById('btnRevealAnswer').classList.add('hidden');
+        } else {
+            document.getElementById('practiceAnswerBox').classList.add('hidden');
+            document.getElementById('btnRevealAnswer').classList.remove('hidden');
         }
+    }
+
+    function prevPracticeQuestion() {
+        if(practiceIndex > 0) { practiceIndex--; renderPracticeCard(); }
     }
 
     function nextPracticeQuestion() {
-        if(practiceIndex < questionsDB.length - 1) {
-            practiceIndex++;
-            renderPracticeCard();
-        }
+        if(practiceIndex < questionsDB.length - 1) { practiceIndex++; renderPracticeCard(); }
     }
 
     // 타이머
-    let timerInterval;
-    let seconds = 0;
-    
+    let timerInterval; let seconds = 0;
     function updateTimerDisplay() {
-        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const secs = (seconds % 60).toString().padStart(2, '0');
-        document.getElementById('timerDisplay').innerText = `${mins}:${secs}`;
+        document.getElementById('timerDisplay').innerText = `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
     }
-
     function startTimer() {
         document.getElementById('btnTimerStart').classList.add('hidden');
         document.getElementById('btnTimerStop').classList.remove('hidden');
         timerInterval = setInterval(() => { seconds++; updateTimerDisplay(); }, 1000);
     }
-
     function stopTimer() {
         clearInterval(timerInterval);
         document.getElementById('btnTimerStart').classList.remove('hidden');
         document.getElementById('btnTimerStop').classList.add('hidden');
         document.getElementById('btnTimerStart').innerText = "이어서 계속";
     }
-
     function resetTimer() {
-        stopTimer();
-        seconds = 0;
-        updateTimerDisplay();
+        stopTimer(); seconds = 0; updateTimerDisplay();
         document.getElementById('btnTimerStart').innerText = "타이머 시작";
     }
 </script>
