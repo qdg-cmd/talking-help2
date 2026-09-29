@@ -436,9 +436,17 @@
             const cards = doc.querySelectorAll('.card');
             
             let newQuestions = [];
+            let seenQuestions = new Set(); // 중복 질문 체크용 Set
+
             cards.forEach((card, idx) => {
                 const qText = card.querySelector('.question-text')?.innerText || '';
                 if(!qText) return;
+                
+                const cleanQText = qText.trim();
+                
+                // 이미 추가된 동일한 질문 내용이 있다면 건너뛰기 (생략)
+                if(seenQuestions.has(cleanQText)) return;
+                seenQuestions.add(cleanQText);
                 
                 let area = '', probing = '';
                 card.querySelectorAll('span').forEach(s => {
@@ -452,7 +460,7 @@
                 newQuestions.push({
                     id: Date.now().toString() + idx,
                     admissionType: document.getElementById('uploadAdmissionType').value,
-                    question: qText.trim(),
+                    question: cleanQText,
                     area: area.trim(), 
                     probing: probing,
                     student_answer: prepBox.trim(),
