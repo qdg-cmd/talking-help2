@@ -69,10 +69,17 @@
 
     <!-- 탭 2: 질문 관리 -->
     <section id="tab-manage" class="tab-content">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex justify-between items-center mb-3">
             <h2 class="text-2xl font-bold">📋 나의 면접 대본</h2>
-            <button onclick="addNewQuestionModal()" class="text-sm btn-secondary px-3 py-1 rounded-lg">+ 새 질문</button>
+            <button onclick="addNewQuestionModal()" class="text-sm btn-secondary px-3 py-1 rounded-lg shadow-sm font-bold">+ 새 질문</button>
         </div>
+        
+        <!-- 전형 필터 서브 탭 -->
+        <div class="flex gap-2 mb-4 bg-gray-100 p-1 rounded-lg">
+            <button onclick="setManageFilter('종합')" id="btnManageFilter_종합" class="flex-1 py-1.5 text-sm font-bold rounded-md bg-white shadow-sm text-[#8c6a50]">종합전형</button>
+            <button onclick="setManageFilter('교과')" id="btnManageFilter_교과" class="flex-1 py-1.5 text-sm font-bold rounded-md text-gray-500 hover:text-gray-700 transition">교과전형</button>
+        </div>
+        
         <p class="text-sm text-gray-500 mb-4">제미나이가 제공한 답변 방향을 나만의 대본으로 수정해 보세요.</p>
         <div id="questionList" class="space-y-4"></div>
     </section>
@@ -82,6 +89,14 @@
         <div class="relative">
             <!-- 상단 고정 네비게이션 & 타이머 -->
             <div class="sticky top-0 z-30 bg-[#fdfbf7] pb-4 pt-2 shadow-sm border-b border-gray-200 mb-4">
+                
+                <!-- 전형 연습 필터 -->
+                <div class="flex gap-2 mb-3 px-1">
+                    <button onclick="setPracticeFilter('전체')" id="btnPracticeFilter_전체" class="flex-1 py-1.5 text-xs font-bold rounded-full bg-[#8c6a50] text-white shadow-sm">전체 연습</button>
+                    <button onclick="setPracticeFilter('종합')" id="btnPracticeFilter_종합" class="flex-1 py-1.5 text-xs font-bold rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition">종합전형</button>
+                    <button onclick="setPracticeFilter('교과')" id="btnPracticeFilter_교과" class="flex-1 py-1.5 text-xs font-bold rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition">교과전형</button>
+                </div>
+
                 <div class="flex justify-between items-center mb-3">
                     <div class="flex items-center gap-2">
                         <button onclick="prevPracticeQuestion()" class="p-2.5 bg-gray-200 text-gray-700 rounded-lg font-black hover:bg-gray-300 transition leading-none">◀</button>
@@ -116,6 +131,12 @@
                 <h3 class="font-bold mb-2">학생 제미나이 HTML 일괄 업로드</h3>
                 <p class="text-sm text-gray-500 mb-4">HTML 파일을 업로드하여 특정 학생의 DB(구글시트)로 전송합니다.</p>
                 
+                <label class="block text-sm font-bold text-gray-700 mb-1">전형 선택</label>
+                <select id="uploadAdmissionType" class="w-full p-3 mb-4 border rounded-lg bg-gray-50">
+                    <option value="종합">종합전형</option>
+                    <option value="교과">교과전형</option>
+                </select>
+
                 <label class="block text-sm font-bold text-gray-700 mb-1">대상 학생 학번</label>
                 <input type="text" id="uploadTargetId" placeholder="예: 3514" class="w-full p-3 mb-4 border rounded-lg bg-gray-50">
                 
@@ -149,6 +170,13 @@
         <h3 class="text-xl font-bold mb-4 text-[#8c6a50]" id="modalTitle">면접 대본 작성 및 수정</h3>
         <input type="hidden" id="modalId">
         <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">전형 구분</label>
+                <select id="modalAdmissionType" class="w-full p-2 border rounded-lg text-sm bg-gray-50">
+                    <option value="종합">종합전형</option>
+                    <option value="교과">교과전형</option>
+                </select>
+            </div>
             <div class="flex gap-2">
                 <div class="flex-1">
                     <label class="block text-xs font-bold text-gray-700 mb-1">영역/역량</label>
@@ -205,6 +233,52 @@
     let questionsDB = [];
     let practiceIndex = 0;
     let isAdmin = false;
+    
+    // 전형 필터 상태
+    let currentManageFilter = '종합'; // 기본값 종합
+    let currentPracticeFilter = '전체'; 
+    let practiceQuestions = [];
+
+    // ==========================================
+    // 필터 제어 로직
+    // ==========================================
+    function setManageFilter(type) {
+        currentManageFilter = type;
+        
+        // 스타일 토글
+        document.getElementById('btnManageFilter_종합').className = "flex-1 py-1.5 text-sm font-bold rounded-md text-gray-500 hover:text-gray-700 transition";
+        document.getElementById('btnManageFilter_교과').className = "flex-1 py-1.5 text-sm font-bold rounded-md text-gray-500 hover:text-gray-700 transition";
+        
+        const activeBtn = document.getElementById('btnManageFilter_' + type);
+        activeBtn.className = "flex-1 py-1.5 text-sm font-bold rounded-md bg-white shadow-sm text-[#8c6a50]";
+        
+        renderManageList();
+    }
+
+    function setPracticeFilter(type) {
+        currentPracticeFilter = type;
+        
+        ['전체', '종합', '교과'].forEach(t => {
+            document.getElementById('btnPracticeFilter_' + t).className = "flex-1 py-1.5 text-xs font-bold rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition";
+        });
+        
+        const activeBtn = document.getElementById('btnPracticeFilter_' + type);
+        activeBtn.className = "flex-1 py-1.5 text-xs font-bold rounded-full bg-[#8c6a50] text-white shadow-sm";
+        
+        // 필터 변경 시 첫 질문부터 다시 시작
+        practiceIndex = 0;
+        updatePracticeQuestions();
+        renderPracticeCard();
+    }
+
+    function updatePracticeQuestions() {
+        if(currentPracticeFilter === '전체') {
+            practiceQuestions = questionsDB;
+        } else {
+            practiceQuestions = questionsDB.filter(q => (q.admissionType || '종합') === currentPracticeFilter);
+        }
+    }
+    // ==========================================
 
     // 로그인 스킵 (후기만 보기)
     function skipLogin() {
@@ -285,6 +359,7 @@
         if(tabId === 'manage') renderManageList();
         if(tabId === 'practice') {
             practiceIndex = 0;
+            updatePracticeQuestions();
             renderPracticeCard();
         }
     }
@@ -376,6 +451,7 @@
                 
                 newQuestions.push({
                     id: Date.now().toString() + idx,
+                    admissionType: document.getElementById('uploadAdmissionType').value,
                     question: qText.trim(),
                     area: area.trim(), 
                     probing: probing,
@@ -423,12 +499,15 @@
     // 질문 리스트 렌더링
     function renderManageList() {
         const container = document.getElementById('questionList');
-        if(questionsDB.length === 0) {
-            container.innerHTML = `<div class="bg-white p-6 rounded-xl text-center text-gray-500 shadow-sm border">선생님께서 등록해주신 질문이 없습니다.</div>`;
+        
+        const filteredDB = questionsDB.filter(q => (q.admissionType || '종합') === currentManageFilter);
+        
+        if(filteredDB.length === 0) {
+            container.innerHTML = `<div class="bg-white p-6 rounded-xl text-center text-gray-500 shadow-sm border">등록된 ${currentManageFilter}전형 질문이 없습니다.</div>`;
             return;
         }
 
-        container.innerHTML = questionsDB.map((q, idx) => `
+        container.innerHTML = filteredDB.map((q, idx) => `
             <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <div class="flex gap-2 mb-3">
                     <span class="bg-[#f4efeb] text-[#8c6a50] text-xs px-2 py-1 rounded font-bold">Q${idx+1}</span>
@@ -460,7 +539,9 @@
     // 모달 로직
     const modal = document.getElementById('questionModal');
     function addNewQuestionModal() {
+        document.getElementById('modalTitle').innerText = "새로운 면접 질문 추가 (" + currentManageFilter + "전형)";
         document.getElementById('modalId').value = '';
+        document.getElementById('modalAdmissionType').value = currentManageFilter;
         document.getElementById('modalQ').value = '';
         document.getElementById('modalStudentAnswer').value = '';
         document.getElementById('modalFollowup').value = '';
@@ -475,7 +556,9 @@
         const q = questionsDB.find(x => String(x.id) === String(id));
         if(!q) return alert("해당 질문을 찾을 수 없습니다.");
         
+        document.getElementById('modalTitle').innerText = "면접 대본 작성 및 수정 (" + (q.admissionType || '종합') + "전형)";
         document.getElementById('modalId').value = q.id;
+        document.getElementById('modalAdmissionType').value = q.admissionType || '종합';
         document.getElementById('modalQ').value = q.question;
         document.getElementById('modalStudentAnswer').value = q.student_answer || '';
         document.getElementById('modalFollowup').value = q.followup || '';
@@ -490,6 +573,7 @@
     function saveQuestionToSheet() {
         const id = document.getElementById('modalId').value;
         const newObj = {
+            admissionType: document.getElementById('modalAdmissionType').value,
             question: document.getElementById('modalQ').value,
             student_answer: document.getElementById('modalStudentAnswer').value,
             followup: document.getElementById('modalFollowup').value,
@@ -506,6 +590,7 @@
             }
         } else {
             newObj.id = Date.now().toString();
+            newObj.admissionType = currentManageFilter;
             questionsDB.push(newObj);
             syncSingleToGoogleSheets(newObj);
         }
@@ -562,14 +647,14 @@
         const container = document.getElementById('practiceContent');
         const counter = document.getElementById('practiceCounter');
 
-        if(questionsDB.length === 0) {
-            container.innerHTML = `<div class="text-center py-10 text-gray-500">질문이 없습니다.</div>`;
+        if(practiceQuestions.length === 0) {
+            container.innerHTML = `<div class="text-center py-10 text-gray-500">조건에 맞는 질문이 없습니다.</div>`;
             counter.innerText = `0 / 0`;
             return;
         }
 
-        const q = questionsDB[practiceIndex];
-        counter.innerText = `${practiceIndex + 1} / ${questionsDB.length}`;
+        const q = practiceQuestions[practiceIndex];
+        counter.innerText = `${practiceIndex + 1} / ${practiceQuestions.length}`;
 
         container.innerHTML = `
             <div class="mb-4 flex gap-2">
@@ -616,7 +701,7 @@
     }
 
     function prevPracticeQuestion() { if(practiceIndex > 0) { practiceIndex--; renderPracticeCard(); } }
-    function nextPracticeQuestion() { if(practiceIndex < questionsDB.length - 1) { practiceIndex++; renderPracticeCard(); } }
+    function nextPracticeQuestion() { if(practiceIndex < practiceQuestions.length - 1) { practiceIndex++; renderPracticeCard(); } }
 
     let timerInterval; let seconds = 0;
     function updateTimerDisplay() { document.getElementById('timerDisplay').innerText = `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`; }
