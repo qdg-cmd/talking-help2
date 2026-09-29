@@ -36,9 +36,10 @@
 <div id="loginScreen" class="fixed inset-0 bg-[#fdfbf7] z-50 flex flex-col items-center justify-center p-4">
     <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 w-full max-w-sm text-center">
         <h2 class="text-2xl font-bold text-[#8c6a50] mb-2">모의면접 LMS</h2>
-        <p class="text-gray-500 mb-6 text-sm">학번을 입력하여 입장하세요.</p>
+        <p class="text-gray-500 mb-6 text-sm">학번을 입력하여 나의 면접 대본을 불러오세요.</p>
         <input type="text" id="studentId" placeholder="예: 3514" class="w-full p-4 mb-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#8c6a50] text-center text-xl font-bold">
-        <button onclick="login()" class="w-full btn-primary py-4 rounded-xl font-bold text-lg">시작하기</button>
+        <button onclick="login()" class="w-full btn-primary py-4 rounded-xl font-bold text-lg mb-3">내 대본 시작하기</button>
+        <button onclick="skipLogin()" class="w-full bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200">로그인 없이 후기만 둘러보기</button>
         <div id="loginLoading" class="hidden mt-4">
             <div class="loader"></div>
             <p class="text-sm text-gray-500 mt-2">데이터를 불러오는 중...</p>
@@ -57,7 +58,7 @@
         </div>
         <div id="reviewResults" class="space-y-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-center text-gray-500 py-10">
-                구글 시트 '후기' 탭에 저장된 데이터를 불러옵니다.
+                원하시는 대학교를 검색하면 면접 기출과 후기가 나타납니다.
             </div>
         </div>
     </section>
@@ -100,7 +101,7 @@
     <section id="tab-admin" class="tab-content">
         <h2 class="text-2xl font-bold mb-4 text-red-600">⚙️ 교사 관리자</h2>
         <div id="adminAuth" class="mb-6">
-            <input type="password" id="adminPwd" placeholder="비밀번호 입력" class="p-3 border rounded-lg w-full mb-2">
+            <input type="password" id="adminPwd" placeholder="비밀번호 입력 (admin)" class="p-3 border rounded-lg w-full mb-2">
             <button onclick="checkAdmin()" class="btn-primary w-full py-3 rounded-lg font-bold">인증하기</button>
         </div>
         
@@ -145,28 +146,28 @@
             <div class="flex gap-2">
                 <div class="flex-1">
                     <label class="block text-xs font-bold text-gray-700 mb-1">영역/역량</label>
-                    <input type="text" id="modalArea" class="w-full p-2 border rounded-lg text-sm bg-gray-50" readonly>
+                    <input type="text" id="modalArea" class="w-full p-2 border rounded-lg text-sm bg-gray-50">
                 </div>
                 <div class="flex-1">
                     <label class="block text-xs font-bold text-gray-700 mb-1">탐침</label>
-                    <input type="text" id="modalProbing" class="w-full p-2 border rounded-lg text-sm bg-gray-50" readonly>
+                    <input type="text" id="modalProbing" class="w-full p-2 border rounded-lg text-sm bg-gray-50">
                 </div>
             </div>
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-1">질문</label>
-                <textarea id="modalQ" class="w-full p-2 border border-gray-200 rounded-lg" rows="2"></textarea>
+                <textarea id="modalQ" class="w-full p-2 border border-gray-200 rounded-lg" rows="3"></textarea>
             </div>
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-1">나의 답변 대본 (초기값: 제미나이 가이드)</label>
-                <textarea id="modalStudentAnswer" class="w-full p-3 border border-[#8c6a50] rounded-lg focus:ring-2 focus:ring-[#8c6a50] focus:outline-none" rows="4"></textarea>
+                <textarea id="modalStudentAnswer" class="w-full p-3 border border-[#8c6a50] rounded-lg focus:ring-2 focus:ring-[#8c6a50] focus:outline-none" rows="6"></textarea>
             </div>
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-1">꼬리질문 (참고용)</label>
-                <textarea id="modalFollowup" class="w-full p-2 border border-gray-200 rounded-lg text-gray-600 bg-gray-50" rows="2"></textarea>
+                <textarea id="modalFollowup" class="w-full p-2 border border-gray-200 rounded-lg text-gray-600 bg-gray-50" rows="3"></textarea>
             </div>
             <div>
                 <label class="block text-sm font-bold text-blue-700 mb-1">꼬리질문 답변 대본</label>
-                <textarea id="modalFollowupAnswer" class="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="3"></textarea>
+                <textarea id="modalFollowupAnswer" class="w-full p-3 border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" rows="4"></textarea>
             </div>
         </div>
         <div class="flex justify-end gap-2 mt-6">
@@ -176,15 +177,23 @@
     </div>
 </div>
 
+<!-- 모의 데이터 (로컬 테스트용) -->
+<script src="reviews_data.js"></script>
+
 <script>
     // ✅ Google Apps Script 배포 URL
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlYYu0QbjGZK4pRVe7B132juxsjjkfJPHXBuQc_XkBRsWq_jOi4Ji5dQpuHnpDA6yi/exec'; 
 
     let currentUser = '';
     let questionsDB = [];
-    let reviewsDB = [];
     let practiceIndex = 0;
     let isAdmin = false;
+
+    // 로그인 스킵 (후기만 보기)
+    function skipLogin() {
+        document.getElementById('loginScreen').classList.add('hidden');
+        switchTab('reviews', document.querySelectorAll('.nav-item')[0]);
+    }
 
     // 로그인
     function login() {
@@ -235,6 +244,11 @@
 
     // 탭 및 관리자
     function switchTab(tabId, element) {
+        if((tabId === 'manage' || tabId === 'practice') && !currentUser && !isAdmin) {
+            alert('이 탭을 이용하려면 먼저 로그인(학번 입력)을 해야 합니다.');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            return;
+        }
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.getElementById(`tab-${tabId}`).classList.add('active');
         if(element) {
@@ -250,7 +264,8 @@
     }
 
     function unlockAdmin() {
-        switchTab('admin', null);
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-admin').classList.add('active');
     }
 
     function checkAdmin() {
@@ -264,7 +279,7 @@
         }
     }
 
-    // 후기 검색 (Mock or Real)
+    // 후기 검색
     function searchReviews() {
         const q = document.getElementById('searchUni').value.trim();
         const results = document.getElementById('reviewResults');
@@ -272,10 +287,27 @@
         
         results.innerHTML = `<div class="loader my-10"></div>`;
         
-        if(SCRIPT_URL.includes('XXXXX')) {
+        // reviews_data.js에 미리 구성된 MOCK_REVIEWS 사용
+        if(typeof MOCK_REVIEWS !== 'undefined') {
             setTimeout(() => {
-                results.innerHTML = `<div class="bg-white p-4 rounded-xl border">아직 백엔드가 연동되지 않았습니다.</div>`;
-            }, 500);
+                const arr = MOCK_REVIEWS;
+                const filtered = arr.filter(row => row.join(' ').includes(q));
+                if(filtered.length === 0) {
+                    results.innerHTML = `<div class="bg-white p-4 rounded-xl text-gray-500 text-center">검색 결과가 없습니다.</div>`;
+                    return;
+                }
+                results.innerHTML = filtered.map(row => `
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-4 text-left">
+                        <div class="mb-2">
+                            <span class="bg-[#8c6a50] text-white px-2 py-1 text-xs rounded font-bold">${row[0]}</span>
+                            <span class="bg-[#f4efeb] text-[#8c6a50] px-2 py-1 text-xs rounded font-bold">${row[1]}</span>
+                            <span class="bg-gray-100 text-gray-600 px-2 py-1 text-xs rounded">${row[2]}</span>
+                        </div>
+                        <p class="font-bold text-gray-800 mt-3 break-keep">Q. ${row[3]}</p>
+                        <p class="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg leading-relaxed whitespace-pre-wrap">A. ${row[4]}</p>
+                    </div>
+                `).join('');
+            }, 300);
             return;
         }
 
@@ -287,23 +319,25 @@
                 results.innerHTML = `<div class="bg-white p-4 rounded-xl text-gray-500 text-center">등록된 후기가 없습니다.</div>`;
                 return;
             }
-            
             const filtered = arr.filter((row, i) => i > 0 && row.join(' ').includes(q));
             if(filtered.length === 0) {
                 results.innerHTML = `<div class="bg-white p-4 rounded-xl text-gray-500 text-center">검색 결과가 없습니다.</div>`;
                 return;
             }
-
             results.innerHTML = filtered.map(row => `
-                <div class="bg-white p-4 rounded-xl border">
-                    <span class="bg-gray-100 px-2 py-1 text-xs rounded">${row[0]} - ${row[1] || ''}</span>
-                    <p class="font-bold mt-2">Q. ${row[3] || '질문 없음'}</p>
-                    <p class="text-sm text-gray-600 mt-1 whitespace-pre-wrap">A. ${row[4] || '답변 없음'}</p>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-4 text-left">
+                    <div class="mb-2">
+                        <span class="bg-[#8c6a50] text-white px-2 py-1 text-xs rounded font-bold">${row[0]}</span>
+                        <span class="bg-[#f4efeb] text-[#8c6a50] px-2 py-1 text-xs rounded font-bold">${row[1]}</span>
+                        <span class="bg-gray-100 text-gray-600 px-2 py-1 text-xs rounded">${row[2]}</span>
+                    </div>
+                    <p class="font-bold text-gray-800 mt-3 break-keep">Q. ${row[3]}</p>
+                    <p class="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg leading-relaxed whitespace-pre-wrap">A. ${row[4]}</p>
                 </div>
             `).join('');
         })
         .catch(() => {
-            results.innerHTML = `<div class="text-red-500">데이터를 불러오는 중 오류가 발생했습니다.</div>`;
+            results.innerHTML = `<div class="text-red-500 text-center">데이터를 불러오는 중 오류가 발생했습니다. (백엔드 URL을 확인하세요)</div>`;
         });
     }
 
@@ -335,7 +369,6 @@
                     else if(!s.innerText.includes('Q')) area += s.innerText + ' ';
                 });
 
-                // 답변 방향 -> 학생 대본 초기값으로 세팅
                 const prepBox = card.querySelector('.prep-box')?.innerText || '';
                 const deepDive = card.querySelector('.deep-dive-box')?.innerText || '';
                 
@@ -344,9 +377,9 @@
                     question: qText.trim(),
                     area: area.trim(), 
                     probing: probing,
-                    student_answer: prepBox.trim(), // 초기값 적용
+                    student_answer: prepBox.trim(),
                     followup: deepDive.trim(),
-                    followup_answer: '' // 꼬리질문 답변은 빈칸
+                    followup_answer: ''
                 });
             });
 
@@ -362,7 +395,8 @@
 
     function sendBulkToGoogleSheets(studentId, questionsArr) {
         if(SCRIPT_URL.includes('XXXXX')) {
-            localStorage.setItem('mockDB_' + studentId, JSON.stringify(questionsArr));
+            const existing = JSON.parse(localStorage.getItem('mockDB_' + studentId) || '[]');
+            localStorage.setItem('mockDB_' + studentId, JSON.stringify([...existing, ...questionsArr]));
             alert(`${studentId} 학생의 DB에 저장되었습니다. (로컬)`);
             document.getElementById('btnUpload').innerText = "구글 시트로 전송";
             return;
@@ -370,11 +404,7 @@
 
         fetch(SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({
-                action: 'saveQuestionsBulk',
-                studentId: studentId,
-                questions: questionsArr
-            })
+            body: JSON.stringify({ action: 'saveQuestionsBulk', studentId: studentId, questions: questionsArr })
         })
         .then(res => res.json())
         .then(() => {
@@ -397,30 +427,35 @@
         }
 
         container.innerHTML = questionsDB.map((q, idx) => `
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                <div class="flex gap-2 mb-2">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex gap-2 mb-3">
                     <span class="bg-[#f4efeb] text-[#8c6a50] text-xs px-2 py-1 rounded font-bold">Q${idx+1}</span>
                     <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded font-bold">${q.area || '공통'}</span>
                     ${q.probing ? `<span class="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded font-bold">${q.probing}</span>` : ''}
                 </div>
-                <p class="font-bold text-gray-800 mb-3">${q.question}</p>
+                <p class="font-bold text-gray-800 text-lg mb-4 leading-snug break-keep">${q.question}</p>
                 
-                <div class="bg-[#fdfbf7] p-3 rounded-lg text-sm text-gray-700 mb-2 border-l-2 border-[#8c6a50] line-clamp-2">
-                    <span class="font-bold block mb-1">나의 답변 대본:</span>
-                    ${q.student_answer || '<span class="text-gray-400">내용 없음</span>'}
+                <!-- 텍스트 짤림 방지를 위해 line-clamp 제거, 원본 그대로 렌더링 -->
+                <div class="bg-[#fdfbf7] p-4 rounded-lg text-sm text-gray-700 mb-3 border-l-4 border-[#8c6a50]">
+                    <span class="font-bold block mb-2 text-[#8c6a50]">📝 나의 답변 대본:</span>
+                    <div class="whitespace-pre-wrap leading-relaxed">${q.student_answer || '<span class="text-gray-400">내용 없음</span>'}</div>
                 </div>
-                <div class="bg-blue-50 p-3 rounded-lg text-sm text-gray-700 mb-3 border-l-2 border-blue-400 line-clamp-1">
-                    <span class="font-bold text-blue-700">꼬리질문:</span> ${q.followup || '없음'}
+                <div class="bg-blue-50 p-4 rounded-lg text-sm text-gray-700 mb-4 border-l-4 border-blue-400">
+                    <span class="font-bold text-blue-700 block mb-2">🔄 꼬리질문:</span> 
+                    <div class="whitespace-pre-wrap leading-relaxed mb-3 text-blue-900">${q.followup || '없음'}</div>
+                    <span class="font-bold text-blue-700 block mb-2 border-t border-blue-100 pt-3">📝 꼬리질문 답변 대본:</span> 
+                    <div class="whitespace-pre-wrap leading-relaxed">${q.followup_answer || '<span class="text-gray-400">내용 없음</span>'}</div>
                 </div>
 
-                <div class="flex justify-end">
-                    <button onclick="editQuestion('${q.id}')" class="text-sm btn-primary px-4 py-2 rounded-lg font-bold">대본 수정하기</button>
+                <div class="flex justify-between items-center mt-2 border-t pt-4">
+                    <button onclick="deleteQuestion('${q.id}')" class="text-sm bg-red-50 text-red-500 px-4 py-2 rounded-lg font-bold hover:bg-red-100">🗑️ 문항 삭제</button>
+                    <button onclick="editQuestion('${q.id}')" class="text-sm btn-primary px-6 py-2 rounded-lg font-bold">대본 수정하기</button>
                 </div>
             </div>
         `).join('');
     }
 
-    // 모달 로직 (수정)
+    // 모달 로직
     const modal = document.getElementById('questionModal');
     function addNewQuestionModal() {
         document.getElementById('modalId').value = '';
@@ -434,8 +469,10 @@
     }
 
     function editQuestion(id) {
-        const q = questionsDB.find(x => x.id === id);
-        if(!q) return;
+        // 아이디 매칭 시 === 사용 가능하게 id를 문자열로 보장
+        const q = questionsDB.find(x => String(x.id) === String(id));
+        if(!q) return alert("해당 질문을 찾을 수 없습니다.");
+        
         document.getElementById('modalId').value = q.id;
         document.getElementById('modalQ').value = q.question;
         document.getElementById('modalStudentAnswer').value = q.student_answer || '';
@@ -460,13 +497,32 @@
         };
 
         if(id) {
-            const idx = questionsDB.findIndex(x => x.id === id);
-            questionsDB[idx] = { ...questionsDB[idx], ...newObj };
-            syncSingleToGoogleSheets(questionsDB[idx]);
+            const idx = questionsDB.findIndex(x => String(x.id) === String(id));
+            if(idx > -1) {
+                questionsDB[idx] = { ...questionsDB[idx], ...newObj };
+                syncSingleToGoogleSheets(questionsDB[idx]);
+            }
         } else {
             newObj.id = Date.now().toString();
             questionsDB.push(newObj);
             syncSingleToGoogleSheets(newObj);
+        }
+    }
+
+    function deleteQuestion(id) {
+        if(confirm("정말 이 질문과 대본을 삭제하시겠습니까? (삭제 시 복구할 수 없습니다)")) {
+            questionsDB = questionsDB.filter(x => String(x.id) !== String(id));
+            
+            // 삭제 로직 (로컬스토리지 우선, 실제 구글 시트 삭제는 별도 구현 필요)
+            if(SCRIPT_URL.includes('XXXXX')) {
+                localStorage.setItem('mockDB_' + currentUser, JSON.stringify(questionsDB));
+                renderManageList();
+            } else {
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'deleteQuestion', studentId: currentUser, questionId: id })
+                }).then(() => renderManageList()).catch(() => renderManageList());
+            }
         }
     }
 
@@ -485,11 +541,7 @@
 
         fetch(SCRIPT_URL, {
             method: 'POST',
-            body: JSON.stringify({
-                action: 'saveQuestion',
-                studentId: currentUser,
-                question: questionObj
-            })
+            body: JSON.stringify({ action: 'saveQuestion', studentId: currentUser, question: questionObj })
         })
         .then(res => res.json())
         .then(() => {
@@ -503,7 +555,7 @@
         });
     }
 
-    // 실전 연습 (한 문제씩)
+    // 실전 연습
     function renderPracticeCard() {
         const container = document.getElementById('practiceContent');
         const counter = document.getElementById('practiceCounter');
@@ -525,28 +577,27 @@
             
             <p class="font-bold text-2xl text-gray-800 mb-6 leading-snug break-keep">${q.question}</p>
             
-            <!-- 꼬리질문은 질문 바로 아래 고정 표출 -->
             ${q.followup ? `
             <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 text-left">
                 <p class="font-bold text-blue-700 text-sm mb-1">🔄 꼬리질문</p>
-                <p class="text-blue-900 font-medium">${q.followup}</p>
+                <p class="text-blue-900 font-medium whitespace-pre-wrap">${q.followup}</p>
             </div>
             ` : ''}
             
-            <!-- 대본 확인 영역 (숨김) -->
             <div id="practiceAnswerBox" class="hidden text-left bg-[#fdfbf7] p-5 rounded-xl border border-[#8c6a50] mt-auto relative">
-                <button onclick="toggleScript(false)" class="absolute top-2 right-2 text-xs bg-gray-200 px-2 py-1 rounded text-gray-600 hover:bg-gray-300">대본 숨기기</button>
+                <!-- 대본 숨기기 버튼 추가 -->
+                <button onclick="toggleScript(false)" class="absolute -top-3 right-4 shadow-md font-bold text-sm bg-white border border-[#8c6a50] text-[#8c6a50] px-4 py-2 rounded-full hover:bg-[#fdfbf7]">🙈 대본 다시 숨기기</button>
                 
-                <h4 class="font-bold text-[#8c6a50] mb-2 text-sm mt-2">📝 나의 답변 대본</h4>
-                <p class="text-gray-700 whitespace-pre-wrap mb-4">${q.student_answer || '<span class="text-gray-400">대본이 없습니다.</span>'}</p>
+                <h4 class="font-bold text-[#8c6a50] mb-2 text-sm mt-4">📝 나의 답변 대본</h4>
+                <p class="text-gray-700 whitespace-pre-wrap mb-4 leading-relaxed">${q.student_answer || '<span class="text-gray-400">대본이 없습니다.</span>'}</p>
                 
                 ${q.followup ? `
                 <h4 class="font-bold text-blue-700 mb-2 text-sm mt-4 border-t pt-4">🔄 꼬리질문 답변 대본</h4>
-                <p class="text-blue-900 whitespace-pre-wrap">${q.followup_answer || '<span class="text-gray-400">대본이 없습니다.</span>'}</p>
+                <p class="text-blue-900 whitespace-pre-wrap leading-relaxed">${q.followup_answer || '<span class="text-gray-400">대본이 없습니다.</span>'}</p>
                 ` : ''}
             </div>
 
-            <button id="btnRevealAnswer" onclick="toggleScript(true)" class="mt-4 btn-secondary w-full py-3 rounded-xl font-bold text-lg border border-gray-300">
+            <button id="btnRevealAnswer" onclick="toggleScript(true)" class="mt-4 btn-secondary w-full py-4 rounded-xl font-bold text-lg border border-gray-300">
                 👀 대본 확인하기
             </button>
         `;
@@ -562,34 +613,16 @@
         }
     }
 
-    function prevPracticeQuestion() {
-        if(practiceIndex > 0) { practiceIndex--; renderPracticeCard(); }
-    }
+    function prevPracticeQuestion() { if(practiceIndex > 0) { practiceIndex--; renderPracticeCard(); } }
+    function nextPracticeQuestion() { if(practiceIndex < questionsDB.length - 1) { practiceIndex++; renderPracticeCard(); } }
 
-    function nextPracticeQuestion() {
-        if(practiceIndex < questionsDB.length - 1) { practiceIndex++; renderPracticeCard(); }
-    }
-
-    // 타이머
     let timerInterval; let seconds = 0;
-    function updateTimerDisplay() {
-        document.getElementById('timerDisplay').innerText = `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
-    }
-    function startTimer() {
-        document.getElementById('btnTimerStart').classList.add('hidden');
-        document.getElementById('btnTimerStop').classList.remove('hidden');
-        timerInterval = setInterval(() => { seconds++; updateTimerDisplay(); }, 1000);
-    }
-    function stopTimer() {
-        clearInterval(timerInterval);
-        document.getElementById('btnTimerStart').classList.remove('hidden');
-        document.getElementById('btnTimerStop').classList.add('hidden');
-        document.getElementById('btnTimerStart').innerText = "이어서 계속";
-    }
-    function resetTimer() {
-        stopTimer(); seconds = 0; updateTimerDisplay();
-        document.getElementById('btnTimerStart').innerText = "타이머 시작";
-    }
+    function updateTimerDisplay() { document.getElementById('timerDisplay').innerText = `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`; }
+    function startTimer() { document.getElementById('btnTimerStart').classList.add('hidden'); document.getElementById('btnTimerStop').classList.remove('hidden'); timerInterval = setInterval(() => { seconds++; updateTimerDisplay(); }, 1000); }
+    function stopTimer() { clearInterval(timerInterval); document.getElementById('btnTimerStart').classList.remove('hidden'); document.getElementById('btnTimerStop').classList.add('hidden'); document.getElementById('btnTimerStart').innerText = "이어서 계속"; }
+    function resetTimer() { stopTimer(); seconds = 0; updateTimerDisplay(); document.getElementById('btnTimerStart').innerText = "타이머 시작"; }
 </script>
+</body>
+</html>
 </body>
 </html>
