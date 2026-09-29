@@ -37,7 +37,7 @@
     <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 w-full max-w-sm text-center">
         <h2 class="text-2xl font-bold text-[#8c6a50] mb-2">모의면접 LMS</h2>
         <p class="text-gray-500 mb-6 text-sm">학번을 입력하여 나의 면접 대본을 불러오세요.</p>
-        <input type="text" id="studentId" placeholder="예: 3514" class="w-full p-4 mb-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#8c6a50] text-center text-xl font-bold">
+        <input type="text" id="studentId" placeholder="예: 3514" class="w-full p-4 mb-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#8c6a50] text-center text-xl font-bold" onkeypress="if(event.key === 'Enter') login()">
         <button onclick="login()" class="w-full btn-primary py-4 rounded-xl font-bold text-lg mb-3">내 대본 시작하기</button>
         <button onclick="skipLogin()" class="w-full bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200">로그인 없이 후기만 둘러보기</button>
         <div id="loginLoading" class="hidden mt-4">
@@ -47,24 +47,26 @@
     </div>
 </div>
 
-<main class="p-4 max-w-2xl mx-auto">
+<main class="p-4 max-w-2xl mx-auto h-full flex flex-col">
     
     <!-- 탭 1: 후기 검색 (PDF 뷰어 방식) -->
-    <section id="tab-reviews" class="tab-content active h-screen max-h-[80vh] flex flex-col">
-        <div class="mb-4">
-            <h2 class="text-2xl font-bold mb-2">📚 면접 후기 자료집</h2>
-            <p class="text-sm text-gray-500 mb-4">원본 PDF 자료집을 보며 원하는 대학을 검색(Ctrl+F)해 보세요.</p>
-            <div class="flex gap-2">
-                <button onclick="document.getElementById('pdfViewer').src='(울산광역시교육청) 2026 대입 면접 후기 자료집1(가천대~부산대).pdf'" class="flex-1 bg-[#8c6a50] text-white py-2 rounded-lg font-bold text-sm hover:bg-[#7a5a40]">
-                    1권 (가천대~부산대)
-                </button>
-                <button onclick="document.getElementById('pdfViewer').src='(울산광역시교육청) 2026 대입 면접 후기 자료집2(부산대~홍익대).pdf'" class="flex-1 bg-[#8c6a50] text-white py-2 rounded-lg font-bold text-sm hover:bg-[#7a5a40]">
-                    2권 (부산대~홍익대)
-                </button>
+    <section id="tab-reviews" class="tab-content active h-[85vh]">
+        <div class="flex flex-col h-full w-full">
+            <div class="mb-3">
+                <h2 class="text-2xl font-bold mb-1">📚 면접 후기 자료집</h2>
+                <p class="text-sm text-gray-500 mb-3">원본 PDF 자료집을 보며 원하는 대학을 검색(Ctrl+F)해 보세요.</p>
+                <div class="flex gap-2">
+                    <button onclick="document.getElementById('pdfViewer').src='(울산광역시교육청) 2026 대입 면접 후기 자료집1(가천대~부산대).pdf'" class="flex-1 bg-[#8c6a50] text-white py-2.5 rounded-lg font-bold text-sm hover:bg-[#7a5a40]">
+                        1권 (가천대~부산대)
+                    </button>
+                    <button onclick="document.getElementById('pdfViewer').src='(울산광역시교육청) 2026 대입 면접 후기 자료집2(부산대~홍익대).pdf'" class="flex-1 bg-[#8c6a50] text-white py-2.5 rounded-lg font-bold text-sm hover:bg-[#7a5a40]">
+                        2권 (부산대~홍익대)
+                    </button>
+                </div>
             </div>
-        </div>
-        <div class="flex-1 w-full bg-gray-200 rounded-xl overflow-hidden shadow-inner">
-            <iframe id="pdfViewer" src="(울산광역시교육청) 2026 대입 면접 후기 자료집1(가천대~부산대).pdf" class="w-full h-full border-none min-h-[500px]" type="application/pdf"></iframe>
+            <div class="flex-1 w-full bg-gray-200 rounded-xl overflow-hidden shadow-inner min-h-0">
+                <iframe id="pdfViewer" src="(울산광역시교육청) 2026 대입 면접 후기 자료집1(가천대~부산대).pdf" class="w-full h-full border-none" type="application/pdf"></iframe>
+            </div>
         </div>
     </section>
 
@@ -79,25 +81,28 @@
     </section>
 
     <!-- 탭 3: 실전 연습 -->
-    <section id="tab-practice" class="tab-content">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold">⏱️ 실전 연습</h2>
-            <div class="bg-red-50 text-red-600 px-3 py-1 rounded-full font-mono font-bold text-lg border border-red-200" id="timerDisplay">00:00</div>
-        </div>
-        
-        <div class="flex justify-center gap-2 mb-6">
-            <button id="btnTimerStart" class="btn-primary px-6 py-2 rounded-full font-bold" onclick="startTimer()">타이머 시작</button>
-            <button id="btnTimerStop" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-full font-bold hidden" onclick="stopTimer()">일시정지</button>
-            <button id="btnTimerReset" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full font-bold" onclick="resetTimer()">초기화</button>
-        </div>
+    <section id="tab-practice" class="tab-content h-[85vh]">
+        <div class="h-full flex flex-col relative">
+            <div class="sticky top-0 z-20 bg-[#fdfbf7] pb-2 border-b border-gray-200 mb-4 pt-2 shadow-sm shrink-0">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-2xl font-bold">⏱️ 실전 연습</h2>
+                    <div class="bg-red-50 text-red-600 px-4 py-1.5 rounded-full font-mono font-black text-2xl border-2 border-red-200 shadow-sm" id="timerDisplay">00:00</div>
+                </div>
+                <div class="flex justify-center gap-2">
+                    <button id="btnTimerStart" class="btn-primary flex-1 py-2.5 rounded-xl font-bold text-sm shadow-sm" onclick="startTimer()">타이머 시작</button>
+                    <button id="btnTimerStop" class="bg-gray-200 text-gray-700 flex-1 py-2.5 rounded-xl font-bold text-sm shadow-sm hidden" onclick="stopTimer()">일시정지</button>
+                    <button id="btnTimerReset" class="bg-gray-100 text-gray-600 px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm" onclick="resetTimer()">초기화</button>
+                </div>
+            </div>
 
-        <div id="practiceContainer" class="bg-white p-6 rounded-2xl shadow-sm border border-[#e6ddd6] min-h-[400px] flex flex-col justify-between">
-            <div id="practiceContent" class="text-center py-10 text-gray-500">질문을 불러오는 중이거나 질문이 없습니다.</div>
-            
-            <div class="flex justify-between mt-6 pt-4 border-t border-gray-100">
-                <button onclick="prevPracticeQuestion()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold">◀ 이전</button>
-                <span id="practiceCounter" class="text-sm text-gray-400 font-bold self-center">0 / 0</span>
-                <button onclick="nextPracticeQuestion()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold">다음 ▶</button>
+            <div id="practiceContainer" class="bg-white p-5 rounded-2xl shadow-sm border border-[#e6ddd6] flex-1 flex flex-col justify-between overflow-y-auto min-h-0">
+                <div id="practiceContent" class="text-center py-6 text-gray-500 flex-1 overflow-y-auto">질문을 불러오는 중이거나 질문이 없습니다.</div>
+                
+                <div class="flex justify-between mt-4 pt-3 border-t border-gray-100 shrink-0">
+                    <button onclick="prevPracticeQuestion()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200">◀ 이전</button>
+                    <span id="practiceCounter" class="text-sm text-gray-400 font-bold self-center">0 / 0</span>
+                    <button onclick="nextPracticeQuestion()" class="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200">다음 ▶</button>
+                </div>
             </div>
         </div>
     </section>
@@ -106,7 +111,7 @@
     <section id="tab-admin" class="tab-content">
         <h2 class="text-2xl font-bold mb-4 text-red-600">⚙️ 교사 관리자</h2>
         <div id="adminAuth" class="mb-6">
-            <input type="password" id="adminPwd" placeholder="비밀번호 입력 (admin)" class="p-3 border rounded-lg w-full mb-2">
+            <input type="password" id="adminPwd" placeholder="비밀번호 입력 (admin)" class="p-3 border rounded-lg w-full mb-2" onkeypress="if(event.key === 'Enter') checkAdmin()">
             <button onclick="checkAdmin()" class="btn-primary w-full py-3 rounded-lg font-bold">인증하기</button>
         </div>
         
